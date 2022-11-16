@@ -1,0 +1,71 @@
+/*
+562c2c
+f2542d
+f5dfbb
+0e9594
+127475
+*/
+
+#container {
+    width: 95vw;
+    height: 93vh;
+    background-color: #F5DFBB;
+    margin: auto;
+    font-family: 'Lucida Sans';
+    color: #E6EED6
+}
+
+#events_board {
+    color: black;
+    background-color: #E6EED6;
+    width: 70%;
+    height: 92%;
+    float: left;
+}
+
+#navigation_bar {
+    height: 8%;
+    width: 100%;
+}
+
+#resource_manager {
+    width: 30%;
+    height: 92%;
+    float: right;
+    background-color: #C78283;
+}
+
+.navigation_segment {
+    height: 100%;
+    width: 20%;
+    float: left;
+    cursor: pointer;    
+}
+
+.navigation_label {
+    margin-top: 5%;
+    margin-left: 8%;
+    font-weight: bold;
+    font-size: 120%;
+}
+
+.button_dark {
+    background-color: #199D9F;
+}
+
+.button_light {
+    background-color: #10A8A8;
+}
+
+body {
+    background-color: #562C2C;
+}
+
+.unselectable {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
