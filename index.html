@@ -6,22 +6,68 @@
 		<link rel="stylesheet" href="style.css">
 		<script src="main.js"></script>
 	</head>
-	<body>
-		<div id="container">
-			<div id="navigation_bar">
-				<div class="navigation_segment button_light unselectable"><div class="navigation_label">Select colony</div></div>
-				<div class="navigation_segment button_dark  unselectable"><div class="navigation_label">Manage facilities</div></div>
-				<div class="navigation_segment button_light  unselectable"><div class="navigation_label">Transfer resources</div></div>
-				<div class="navigation_segment button_dark unselectable"><div class="navigation_label">Archive</div></div>
-				<div class="navigation_segment button_light  unselectable"><div class="navigation_label">Next month</div></div>
+	<body onload="load()">
+		<div id="container" class="unselectable">
+			<div id="big_window">
+				<div class="notif_title">
+					<div class="window_title_inside"><div id="big_window_title">Title</div></div>
+					<div class="x_button clickable" onclick="closeBigWindow()"><img src="images/X.png"></div>
+				</div>
+				<div id="big_window_details" class="notif_details">yeah</div>
+		
 			</div>
-			<div id="events_board">events</div>
-			<div id="resource_manager">
+
+			<div id="navigation_bar">
+				<div onclick="openColonySelection()"   class="navigation_segment button_light clickable"><div class="navigation_label">Select a colony</div></div>
+				<div onclick="openManageFacilities()"   class="navigation_segment button_dark clickable"><div class="navigation_label">Manage facilities</div></div>
+				<div onclick="openTransferResources()" class="navigation_segment button_light clickable"><div class="navigation_label">Transfer resources</div></div>
+				<div onclick="openTechTree()"           class="navigation_segment button_dark clickable"><div class="navigation_label">Tech tree</div></div>
+				<div onclick="nextTurn()"              class="navigation_segment button_light clickable"><div class="navigation_label">Next month</div></div>
+			</div>
+			<div id="events_board">
+				<div id="notif"></div>
+			</div>
+			<div id="resource_manager"><div id="resource_manager_inside">
 				<table>
 					<tr>
-						<td></td>
+						<td colspan="2"><h2>Status of <a id="cityName"></a>:</h2></td>
+					</tr>
+					<tr>
+						<td>Food:</td>
+					</tr>
+					<tr>
+						<td>Build tokens:</td>
+					</tr>
+					<tr>
+						<td>Storage filled/capacity:</td>
 					</tr>
 				</table>
+				<br>
+				<table>
+					<tr>
+						<td>Energy production/consumption:</td>
+					</tr>
+					<tr>
+						<td>Transporters:</td>
+					</tr>
+					<tr>
+						<td colspan="2"><h2>Next month status prediction:</h2></td>
+					</tr>
+					<tr>
+						<td>Food:</td>
+					</tr>
+					<tr>
+						<td>Energy:</td>
+					</tr>
+					<tr>
+						<td>Build tokens:</td>
+					</tr>
+					<tr>
+						<td>Transporters:</td>
+					</tr>
+				</table>
+				
+				</div><div id="question_mark" onclick="openHowTo()">?</div>
 			</div>
 		</div>
 	</body>

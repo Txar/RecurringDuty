@@ -12,7 +12,7 @@ f5dfbb
     background-color: #F5DFBB;
     margin: auto;
     font-family: 'Lucida Sans';
-    color: #E6EED6
+    color: #E6EED6;
 }
 
 #events_board {
@@ -29,10 +29,20 @@ f5dfbb
 }
 
 #resource_manager {
+    font-size: 110%;
     width: 30%;
     height: 92%;
     float: right;
     background-color: #C78283;
+}
+
+#resource_manager_inside {
+    margin-left: 4%;
+    height: 95.5%;
+}
+
+#colony_selector {
+    color: inherit;
 }
 
 .navigation_segment {
@@ -40,6 +50,10 @@ f5dfbb
     width: 20%;
     float: left;
     cursor: pointer;    
+}
+
+.navigation_segment:hover{
+    background-color: #14989A;
 }
 
 .navigation_label {
@@ -68,4 +82,88 @@ body {
     -moz-user-select: none;
     -ms-user-select: none;
     user-select: none;
+}
+
+.notif_title {
+    background-color: #10A8A8;
+    height: 8%;
+    padding: 0;
+    font-size: 120%;
+    font-weight: bold;
+    color: #E6EED6;
+}
+
+.notif_details {
+    height: 80%;
+    padding: 1%;
+}
+
+#notif {
+    width: 60%;
+    height: 60%;
+    border: #562C2C 3px solid;
+    margin: auto;
+    margin-top: 10%;
+}
+
+#notif_ok_form {
+    text-align: center;
+}
+
+#big_window {
+    position: absolute;
+    width: 80%;
+    height: 80%;
+    left: 10%;
+    top: 5%;
+    box-shadow: 10px 10px #562C2C;
+    border: solid #562C2C;
+    background-color: #C78283;
+}
+
+.x_button {
+    height: 100%;
+    float: right;
+    background-color: #10A8A8;
+}
+
+.x_button:hover {
+    background-color: #14989A;
+}
+
+.clickable:hover {
+    cursor: pointer;
+}
+
+img {
+    height: 100%;
+    width: auto;
+}
+
+.window_title_inside {
+    padding: 1%;
+    float: left;
+}
+
+#question_mark {
+    font-size: 130%;
+    float: right;
+    padding: 2%;
+}
+
+#question_mark:hover {
+    cursor: help;
+}
+
+button {
+    background-color: #E6EED6;
+    border-color: #562C2C;
+    font-style: inherit;
+    color: #562C2C;
+    text-align: center;
+    font-size: 105%;
+}
+
+button:hover {
+    cursor: pointer;
 }
