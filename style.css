@@ -21,6 +21,7 @@ f5dfbb
     width: 70%;
     height: 92%;
     float: left;
+    position: relative;
 }
 
 #navigation_bar {
@@ -102,8 +103,10 @@ body {
     width: 60%;
     height: 60%;
     border: #562C2C 3px solid;
-    margin: auto;
-    margin-top: 10%;
+    background-color: inherit;
+    position: absolute;
+    top: 10%;
+    left: 20%;
 }
 
 #notif_ok_form {

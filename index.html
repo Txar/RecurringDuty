@@ -8,14 +8,6 @@
 	</head>
 	<body onload="load()">
 		<div id="container" class="unselectable">
-			<div id="big_window">
-				<div class="notif_title">
-					<div class="window_title_inside"><div id="big_window_title">Title</div></div>
-					<div class="x_button clickable" onclick="closeBigWindow()"><img src="images/X.png"></div>
-				</div>
-				<div id="big_window_details" class="notif_details">yeah</div>
-		
-			</div>
 
 			<div id="navigation_bar">
 				<div onclick="openColonySelection()"   class="navigation_segment button_light clickable"><div class="navigation_label">Select a colony</div></div>
@@ -25,18 +17,35 @@
 				<div onclick="nextTurn()"              class="navigation_segment button_light clickable"><div class="navigation_label">Next month</div></div>
 			</div>
 			<div id="events_board">
+				<p>
+					Qui at nihil asperiores et id velit. Suscipit enim culpa maiores illum. Asperiores inventore blanditiis omnis ipsam. 
+					Placeat velit quis dolor. Qui qui voluptas eligendi. Cumque molestiae soluta ut cupiditate fuga.
+				</p><p>
+					Dolore aut et consequatur consequuntur dicta. Qui distinctio non facere. Velit omnis sit delectus voluptatibus natus quae odit. 
+					Vitae delectus similique consequatur occaecati enim laboriosam.
+				</p><p>
+					Necessitatibus explicabo et voluptatibus assumenda necessitatibus iure consequatur omnis. Exercitationem nesciunt quod ipsa inventore molestias. 
+					Aperiam qui voluptates aspernatur minus illum saepe voluptates. Et quaerat veritatis quidem nesciunt ut sed. Iure iste iure consequuntur. 
+					Laborum praesentium explicabo et.
+				</p><p>
+					Nihil ratione corrupti labore non ea amet deserunt et. Enim est numquam voluptas voluptates quo. Doloremque qui nihil ratione modi qui. 
+					Eos assumenda laborum labore. Dolorum inventore adipisci sint odio dolor.
+				</p><p>
+					Et nulla reprehenderit recusandae. Soluta praesentium et ab consequatur quae soluta facilis. 
+					Eos voluptas quae ex ipsam voluptatum molestiae rerum rem. Et amet quibusdam omnis aliquam nulla in aut. Impedit consequatur nesciunt inventore.
+				</p>
 				<div id="notif"></div>
 			</div>
 			<div id="resource_manager"><div id="resource_manager_inside">
 				<table>
 					<tr>
-						<td colspan="2"><h2>Status of <a id="cityName"></a>:</h2></td>
+						<td colspan="2"><h2>Resource status of <a id="cityName"></a>:</h2></td>
 					</tr>
 					<tr>
 						<td>Food:</td>
 					</tr>
 					<tr>
-						<td>Build tokens:</td>
+						<td>Building materials:</td>
 					</tr>
 					<tr>
 						<td>Storage filled/capacity:</td>
@@ -68,6 +77,14 @@
 				</table>
 				
 				</div><div id="question_mark" onclick="openHowTo()">?</div>
+
+				<div id="big_window">
+					<div class="notif_title">
+						<div class="window_title_inside"><div id="big_window_title">Title</div></div>
+						<div class="x_button clickable" onclick="closeBigWindow()"><img src="images/X.png"></div>
+					</div>
+					<div id="big_window_details" class="notif_details">yeah</div>
+				</div>
 			</div>
 		</div>
 	</body>

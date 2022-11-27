@@ -49,24 +49,11 @@ const contents = {
     food: 3
 }
 
-const size = {
-    research_data: 1,
-    citizen: 1,
-    build_materials: 4,
-    energy_unit: 3,
-    food: 2,
-    metasubstance: 5,
-    fabricated_goods: 3
-}
-
-const resource_types = {
-    building_materials: 0,
-    energy_unit: 1,
-    food: 2,
-    transporter: 3,
-    metasubstance: 4,
-    fabricated_goods: 5,
-    research_data: 6
+class resource_type {
+    constructor (name, size) {
+        this.name = name
+        this.size = size
+    }
 }
 
 function getRandomInt (min, max) {
@@ -126,7 +113,7 @@ class citizen {
 }
 
 class building {
-    constructor (name, production, consumption, cost, maintenance_interval = 3, workers = 0, worker_happiness_improvement = 0, colony_happiness_improvement = 0) {
+    constructor (name, production, consumption, cost, maintenance_interval = 3, workers = 0, worker_happiness_improvement = 0, colony_happiness_improvement = 0, storage_capacity = 0, storage_types = []) {
         //production, consumption, etc stored like 
         ///[[item, amount], [item2, amount2]]
         this.name = name
@@ -137,6 +124,17 @@ class building {
         this.worker_happiness_improvement = worker_happiness_improvement
         this.colony_happiness_improvement = colony_happiness_improvement
         this.maintenance_interval = maintenance_interval
+        this.storage_capacity = storage_capacity
+        this.storage_types = storage_types
+    }
+
+    canBeStored (resource_name) {
+        if (this.storage_capacity == 0) return false
+
+        for (let i = 0; i < this.storage_types.length; i++) {
+            if (this.storage_capacity[i] == resource_name) return true
+        }
+        return false
     }
 }
 
@@ -358,6 +356,42 @@ function closeBigWindow(){
 }
 
 //document.getElementById('element').hidden = true
+
+const size = {
+    research_data: 1,
+    citizen: 1,
+    build_materials: 4,
+    energy_unit: 3,
+    food: 2,
+    metasubstance: 5,
+    fabricated_goods: 3
+}
+
+const resource_names = {
+    citizen: "Citizen",
+    building_materials: "Building materials",
+    metasubstance: "Metasubstance",
+    fabricated_goods: "Fabricated goods",
+    energy_unit: "Energy",
+    food: "Food",
+    research_data: "Research data"
+}
+
+const resource_types = [
+    new resource_type(resource_names.citizen, 1),
+    new resource_type(resource_names.building_materials, 4),
+    new resource_type(resource_names.metasubstance, 5),
+    new resource_type(resource_names.fabricated_goods, 3),
+    new resource_type(resource_names.energy_unit, 10),
+    new resource_type(resource_names.food, 2),
+    new resource_type(resource_names.research_data, 1),
+]
+
+const building_types = [
+    new building("Housing", [], [[resource_names.energy_unit, 4]], [[resource_names.building_materials, 5], [resource_names.metasubstance, 1]], 3, 0, 0, 0, 6, [resource_names.citizen]),
+    new building("Metasubstance extractor", [[resource_names.metasubstance, 5]], [[resource_names.energy_unit, 10]], [[resource_names.building_materials, 12]], 5, 0, 0, -1, 0, []),
+    new building("General goods factory", [[resource_names.fabricated_goods, 4]], [[resource_names.energy_unit, 10]], [[resource_names.building_materials, 10], [resource_names.metasubstance, 5]], 5, 0, 0, -0.5, 0, [])
+]
 
 let date = 0
 let colonies = []
