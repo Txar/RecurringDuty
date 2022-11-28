@@ -11,6 +11,10 @@ const COLONY_NAMES =
 "Ozklerh", "Phernomack", "Walplunk", "Greckcheck",
 "Bhenmbre", "Plinmfen", "Phokmer", "Chunmack"]
 
+function randomColonyName(){
+    return COLONY_NAMES[getRandomInt(0, COLONY_NAMES.length - 1)]
+}
+
 const MIN_DEATH_AGE = 30
 
 const PLANET_NAME = planetNameGenerator(Math.random(10) * 10 + 3)
@@ -113,7 +117,7 @@ class citizen {
 }
 
 class building {
-    constructor (name, production, consumption, cost, maintenance_interval = 3, workers = 0, worker_happiness_improvement = 0, colony_happiness_improvement = 0, storage_capacity = 0, storage_types = []) {
+    constructor (name, production, consumption, cost, maintenance_interval = 3, workers = 0, worker_happiness_improvement = 0, colony_happiness_improvement = 0, storage_capacity = 0, storage_types = [], buildable = true) {
         //production, consumption, etc stored like 
         ///[[item, amount], [item2, amount2]]
         this.name = name
@@ -126,6 +130,7 @@ class building {
         this.maintenance_interval = maintenance_interval
         this.storage_capacity = storage_capacity
         this.storage_types = storage_types
+        this.buildable = buildable
     }
 
     canBeStored (resource_name) {
@@ -190,18 +195,22 @@ class colony {
     newTransport (transporter) {
         if (this.new_transporters > 0){
 
-            let temp_food = this.new_food
+            /*let temp_food = this.new_food
             let temp_build_tokens = this.new_build_tokens
             let temp_citizens = this.new_citizens
-            let temp_energy_units = this.new_energy_units
+            let temp_energy_units = this.new_energy_units*/
 
             let transporter_copy = transporter
 
-            while (transporter_copy.length > 0){
+            let temp_resources = new_resources
 
+            while (transporter_copy.length > 0){
+                this.temp_resources[transporter_copy[0]]--
+                if (this.temp_resources[transporter_copy[0]] < 0) return false;
+                transporter_copy.shift()
             }
 
-            for (let i = 0; i < transporter.content.length; i++){
+            /*for (let i = 0; i < transporter.content.length; i++){
                 if (transporter.content[i] == contents.citizen) {
                     temp_citizens--
                 }
@@ -214,16 +223,17 @@ class colony {
                 else if (transports.content[i] == contents.food) {
                     temp_food++
                 }
+            }*/
+
+            for (let i = 0; i < this.temp_resources.length; i++){
+                if (0 > this.temp_resources[i]) return false
             }
 
-            if (temp_food < 0 || temp_build_tokens < 0 || temp_citizens < 0 || temp_energy_units < 0){
-                return false
-            }
-
-            this.new_food = temp_food
+            /*this.new_food = temp_food
             this.new_build_tokens = temp_build_tokens
             this.new_citizens = temp_citizens
-            this.new_energy_units = temp_energy_units
+            this.new_energy_units = temp_energy_units*/
+            this.new_resources = temp_resources
             this.new_transporters--
             return true
         }
@@ -339,6 +349,17 @@ function openTechTree(){
 
 function openColonySelection(){
     document.getElementById("big_window_title").innerText = "Select a colony"
+    d = document.getElementById("big_window_details")
+    d.innerHTML = ""
+    for (let i = 0; i < colonies.length; i++){
+        if (i == currentColony) d.innerHTML += '<div class="colony_selected">' + colonies[i].name 
+        + '<div class="colony_citizen_amount">' + colonies[i].citizens.length + '</div></div>'
+
+        else d.innerHTML += '<div class="colony_select" onclick="selectColony(' + i + ')">' + colonies[i].name
+        + '<div class="colony_citizen_amount">' + colonies[i].citizens.length + '</div></div>'
+    }
+    d.innerHTML += '<div class="colony_select" onclick="createNewColony()">Create a new colony</div>'
+
     openBigWindow()
 }
 
@@ -353,6 +374,15 @@ function openBigWindow(){
 
 function closeBigWindow(){
     document.getElementById("big_window").hidden = true
+}
+
+function selectColony(n){
+    currentColony = n
+    openColonySelection()
+}
+
+function createNewColony(){
+    
 }
 
 //document.getElementById('element').hidden = true
@@ -388,9 +418,10 @@ const resource_types = [
 ]
 
 const building_types = [
+    new building("Colony base", [], [], [[resource_names.building_materials, 10]], 8, 0, 0, 0, 0, [], false),
     new building("Housing", [], [[resource_names.energy_unit, 4]], [[resource_names.building_materials, 5], [resource_names.metasubstance, 1]], 3, 0, 0, 0, 6, [resource_names.citizen]),
     new building("Metasubstance extractor", [[resource_names.metasubstance, 5]], [[resource_names.energy_unit, 10]], [[resource_names.building_materials, 12]], 5, 0, 0, -1, 0, []),
-    new building("General goods factory", [[resource_names.fabricated_goods, 4]], [[resource_names.energy_unit, 10]], [[resource_names.building_materials, 10], [resource_names.metasubstance, 5]], 5, 0, 0, -0.5, 0, [])
+    new building("General goods factory", [[resource_names.fabricated_goods, 4]], [[resource_names.energy_unit, 10]], [[resource_names.building_materials, 10], [resource_names.metasubstance, 5]])
 ]
 
 let date = 0
@@ -407,4 +438,7 @@ function load () {
 
     document.getElementById("cityName").innerText = COLONY_NAMES[getRandomInt(0, COLONY_NAMES.length)]
     document.title = "Colony on " + PLANET_NAME
+
+    colonies.push(new colony(0, 0, randomColonyName()))
+    colonies.push(new colony(0, 0, randomColonyName()))
 }

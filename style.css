@@ -119,9 +119,12 @@ body {
     height: 80%;
     left: 10%;
     top: 5%;
-    box-shadow: 10px 10px #562C2C;
     border: solid #562C2C;
     background-color: #C78283;
+}
+
+.window_shadow {
+    box-shadow: 10px 10px #562C2C;
 }
 
 .x_button {
@@ -169,4 +172,27 @@ button {
 
 button:hover {
     cursor: pointer;
+}
+
+#events_board_content {
+    margin: 1%;
+}
+
+.colony_select {
+    background-color: #10A8A8;
+    border-color: #562C2C;
+}
+
+.colony_selected {
+    background-color: #14989A;
+    border-color: #562C2C;
+}
+
+.colony_select, .colony_selected {
+    margin-bottom: 1%;
+    padding: 1%;
+}
+
+.colony_citizen_amount {
+    float: right;
 }
