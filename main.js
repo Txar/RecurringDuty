@@ -1,4 +1,4 @@
-const CHARACTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789._-"
+const CHARACTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789./_-"
 const COLONY_NAMES = 
 ["New Warsaw", "Taciturn", "Lurk", "Stiff",
 "Twig", "Courage", "Weeged", "Domino Hub",
@@ -9,20 +9,28 @@ const COLONY_NAMES =
 "Lherman", "Stember", "Otrob", "Galloklam", "Frenkhan",
 "Xhenmen", "Mloomer", "Ohmnem", "Reefreder", "Gheern",
 "Ozklerh", "Phernomack", "Walplunk", "Greckcheck",
-"Bhenmbre", "Plinmfen", "Phokmer", "Chunmack"]
+"Bhenmbre", "Plinmfen", "Phokmer", "Chunmack",
+
+"Magnaterre", "Rempank", "Qwerty", "Sdernack", 
+"Wendowic", "Xemnolar", "Fherne", "Schloppe", "Qinne",
+"Guettur", "Knitkneck", "Puurtern", "Shdovnek", 
+"Grenchmag", "Plonolp", "Eerneman"]
 
 function randomColonyName(){
-    return COLONY_NAMES[getRandomInt(0, COLONY_NAMES.length - 1)]
+    i = getRandomInt(0, COLONY_NAMES.length - 1)
+    a = COLONY_NAMES[i]
+    COLONY_NAMES.splice(i, 1)
+    return a
 }
 
 const MIN_DEATH_AGE = 30
 
 const PLANET_NAME = planetNameGenerator(Math.random(10) * 10 + 3)
 
-const TRANSPORTER_CAPACITY = 12
-const STORAGE_CAPACITY = 60
-const POWERHOUSE_PRODUCTION = 10
-const TRANSPORTER_PRODUCTION = 0.2
+const TRANSPORTER_CAPACITY = 24
+//const STORAGE_CAPACITY = 60
+//const POWERHOUSE_PRODUCTION = 10
+//const TRANSPORTER_PRODUCTION = 0.2
 
 const power_consumption = {
     storage: 1,
@@ -46,17 +54,11 @@ const gender = {
     other: 2
 }
 
-const contents = {
-    citizen: 0,
-    build_token: 1,
-    energy_unit: 2,
-    food: 3
-}
-
 class resource_type {
-    constructor (name, size) {
+    constructor (name, size, can_be_transported_normally = true) {
         this.name = name
         this.size = size
+        this.can_be_transported_normally = can_be_transported_normally
     }
 }
 
@@ -75,17 +77,22 @@ function planetNameGenerator (nameLength) {
 class transport {
     constructor (destination) {
         this.content = []
-        this.weight = 0
+        this.space_used = 0
         this.destination = destination
     }
     
     addToTransport (content) {
-        if (size[content] + this.weight <= TRANSPORTER_CAPACITY){
-            this.weight += size[content]
+        if (resource_types[content].size + this.space_used <= TRANSPORTER_CAPACITY){
+            this.space_used += resource_types[content].size
             this.content.push(content)
             return true
         }
         return false
+    }
+
+    removeFromTransport (i) {
+        this.space_used -= resource_types[this.content[i]].size
+        this.content.splice(i, 1)
     }
 }
 
@@ -117,7 +124,9 @@ class citizen {
 }
 
 class building {
-    constructor (name, production, consumption, cost, maintenance_interval = 3, workers = 0, worker_happiness_improvement = 0, colony_happiness_improvement = 0, storage_capacity = 0, storage_types = [], buildable = true) {
+    constructor (name, production, consumption, cost, maintenance_interval = 3,
+        workers = 0, worker_happiness_improvement = 0, colony_happiness_improvement = 0,
+        storage_capacity = 0, storage_types = [], buildable = true) {
         //production, consumption, etc stored like 
         ///[[item, amount], [item2, amount2]]
         this.name = name
@@ -137,7 +146,7 @@ class building {
         if (this.storage_capacity == 0) return false
 
         for (let i = 0; i < this.storage_types.length; i++) {
-            if (this.storage_capacity[i] == resource_name) return true
+            return (this.storage_capacity[i] == resource_name)
         }
         return false
     }
@@ -161,21 +170,80 @@ class colony {
         this.food = 0
 
         this.new_resources = {} // id : amount
-        this.new_build_tokens = 0
+        /*this.new_build_tokens = 0
         this.new_energy_units = 0
-        this.new_food = 0
+        this.new_food = 0*/
         this.new_transporters = 0
         this.new_citizens = 0
 
         this.buildings = []
     }
 
-    capacity() {
-        return STORAGE_CAPACITY * this.storages
+    consumeProduce () {
+        let maxCapacity = this.maxCapacity()
+        let lostResources = {}
+        this.buildings.forEach(i => {
+            let temp_resources = this.resources
+            let can_produce = true
+            i.consumption.forEach(j => {
+                temp_resources[j[0]] -= j[1]
+                if (temp_resources[j[0]] < 0) {
+                    can_produce = false
+                }
+                return
+            })
+            if (can_produce) {
+                i.production.forEach(j => {
+                    if (isNaN(temp_resources[j[0]])) temp_resources[j[0]] = 0
+
+                    if (temp_resources[j[0]] + j[1] > maxCapacity[j[0]]){
+                        if (isNaN(lostResources[j[0]])) lostResources[j[0]] = 0
+                        lostResources[j[0]] + j[1]
+                    }
+                    else temp_resources[j[0]] += j[1]
+                })
+                this.resources = temp_resources
+            }
+            else {
+                notifs.push(new notif("Insufficient resources!", "A " + i.name + " in " + this.name + " couldn't produce because the needed resources weren't provided."))
+            }
+        })
+        if (Object.keys(lostResources).length > 0){
+            let details = "You lost resources from production in " + this.name + " because the storage was full.<br>Resources lost:"
+            for (let i in lostResources) {
+                details += "<br>" + lostResources[i] + "x" + " " + i
+            }
+            notifs.push(new notif("Resources lost!", details))
+        }
+    }
+
+    maxCapacity () {
+        let capacity = {}
+        this.buildings.forEach(i => {
+            if (!(i.storage_capacity == 0)){
+                i.storage_types.forEach(j => {
+                    if (isNaN(capacity[j[0]])) capacity[j[0]] = 0
+                    capacity[j[0]] += j[1] * i.storage_capacity
+                })
+            }
+        })
+        return capacity
+    }
+
+    capacity () {
+        let capacity = this.maxCapacity()
+        for (let i in this.new_resources) {
+            if (i[0] == resource_names.citizen) capacity[i] -= this.citizens.length
+            else capacity[i] -= this.new_resources[i]
+        }
+        return capacity
     }
 
     canCitizensBeBorn () {
-        return this.citizens.some(citizen => citizen.gender == gender.female) && this.citizens.some(citizen => citizen.gender == gender.male)
+        if (this.citizens.some(citizen => citizen.gender == gender.female) && this.citizens.some(citizen => citizen.gender == gender.male)) {
+            return this.capacity[resource_names.citizen]
+        }
+        return 0
     }
 
     oldAgeDeaths () {
@@ -192,6 +260,33 @@ class colony {
         return 0
     }
 
+    unpackTransporter (t) {
+        let capacity = this.capacity()
+        let lostResources = {}
+
+        t.content.forEach(i => {
+            let j = resource_types[i].name
+            if (isNaN(capacity[j]) || capacity[j] - 1 < 0) {
+                if (isNaN(lostResources[j])) lostResources[j] = 0
+                lostResources[j]++
+            }
+            else {
+                if (isNaN(this.new_resources[j])) this.new_resources[j] = 0
+                this.new_resources[j]++
+            }
+        });
+
+        console.log(lostResources, " ", capacity, " ", this.new_resources, " ", t.content)
+        if (Object.keys(lostResources).length > 0){
+            let details = "You lost resources from a transport to " + colonies[t.destination].name + " because the storage was full.<br>Resources lost:"
+            for (let i in lostResources) {
+                details += "<br>" + lostResources[i] + "x" + " " + i
+            }
+            notifs.push(new notif("Resources lost!", details))
+        }
+        this.new_transporters++
+    }
+
     newTransport (transporter) {
         if (this.new_transporters > 0){
 
@@ -202,12 +297,16 @@ class colony {
 
             let transporter_copy = transporter
 
-            let temp_resources = new_resources
+            let temp_resources = this.new_resources
 
-            while (transporter_copy.length > 0){
-                this.temp_resources[transporter_copy[0]]--
-                if (this.temp_resources[transporter_copy[0]] < 0) return false;
-                transporter_copy.shift()
+            while (transporter_copy.content.length > 0){
+                if (isNaN(temp_resources[resource_types[transporter_copy.content[0]].name])) {
+                    temp_resources[resource_types[transporter_copy.content[0]].name] = 0
+                }
+
+                temp_resources[resource_types[transporter_copy.content[0]].name]--
+                if (temp_resources[resource_types[transporter_copy.content[0]].name] < 0) return false;
+                transporter_copy.content.shift()
             }
 
             /*for (let i = 0; i < transporter.content.length; i++){
@@ -225,8 +324,8 @@ class colony {
                 }
             }*/
 
-            for (let i = 0; i < this.temp_resources.length; i++){
-                if (0 > this.temp_resources[i]) return false
+            for (let i = 0; i < temp_resources.length; i++){
+                if (0 > temp_resources[i]) return false
             }
 
             /*this.new_food = temp_food
@@ -240,9 +339,23 @@ class colony {
         return false
     }
 
-    calcScore() {
+    calcScore () {
         return this.citizens.length * this.calcHappiness()
-    } 
+    }
+
+    canAfford (b) {
+        let temp_resources = this.new_resources
+        for (let i = 0; i < b.cost.length; i++){
+            if (isNaN(temp_resources[b.cost[i][0]]) || temp_resources[b.cost[i][0]] < b.cost[i][1]){
+                return false
+            }
+            else {
+                temp_resources[b.cost[i][0]] -= b.cost[i][1]
+            }
+        }
+        this.new_resources = temp_resources
+        return true
+    }
 }
 
 class notif {
@@ -264,13 +377,14 @@ class notif {
     }
 }
 
+
+
+
+
+
 function closeNotif() {
     let notifWindow = document.getElementById("notif")
-    if (notifs.length > 0){
-        notifWindow.innerHTML = notifs[0].returnInnerHTML
-        notifs.pop(0)
-    }
-    else {
+    if (!openNotif()) {
         notifWindow.hidden = true
     }
 }
@@ -280,69 +394,98 @@ function openNotif() {
     if (notifs.length > 0){
         notifWindow.hidden = false
         notifWindow.innerHTML = notifs[0].returnInnerHTML()
-        notifs.pop(0)
+        notifs.shift()
         return true
     }
     return false
 }
 
-function nextTurn () {
-    date++
-    if (colonies.length == 0){
-
-    }
-
-    for (let i = 0; i < colonies.length; i++){
-        colonies[i].citizens = colonies[i].new_citizens
-        colonies[i].transporters = colonies[i].new_transporters
-        colonies[i].food = colonies[i].new_food
-        colonies[i].build_tokens = colonies[i].new_build_tokens
-        colonies[i].energy_units = colonies[i].new_energy_units
-        colonies[i].oldAgeDeaths()
-    }
-
-    for (let i = 0; i < transports.length; i++){
-        colonies[transport[i].destination]++
-        for (let j = 0; j < transports.content.length; j++){
-            if (transports.content[j] == contents.citizen) {
-                colonies[transports[i].destination].citizens++
-            }
-            else if (transports.content[j] == contents.build_token) {
-                colonies[transports[i].destination].build_token++
-            }
-            else if (transports.content[j] == contents.energy_unit) {
-                colonies[transports[i].destination].energy_unit++
-            }
-            else if (transports.content[j] == contents.food) {
-                colonies[transports[i].destination].food++
-            }
-        }
-    }
-    transports = []
-
-    for (let i = 0; i < colonies.length; i++){
-        if (colonies[i]){
-            if (colonies[i].food < colonies[i].citizens){
-                let amount = colonies[i].citizens.length - colonies[i].food
-                for (let j = 0; j < amount; j++){
-                    colonies[i].citizens[getRandomInt(0, colonies[i].citizens.length)].pop
-                }
-                colonies[i].food -= amount
-                colonies[i].deaths += amount
-                colonies[i].non_old_age_deaths += amount
-            }
-        }
-    }
-    openNotif()
-}
-
-function openTransferResources(){
+function openTransferResources () {
     document.getElementById("big_window_title").innerText = "Transfer resources"
     bigWindowContent = document.getElementById("big_window_details")
+
+    if (editedTransport == null) {
+        pointOfDeparture = currentColony
+        editedTransport = new transport(currentColony)
+    }
+
+    let endResult = "<table id='transfer_table'>"
+    
+    let coloniesOptions = ""
+    for (let i = 0; i < colonies.length; i++) {
+        coloniesOptions += "<option value='" + i + "'"
+        if (i == pointOfDeparture){
+            coloniesOptions += " selected='select'"
+        }
+        coloniesOptions += ">" + colonies[i].name + "</option>"
+    }
+    endResult += "<tr><td>Choose point of departure :</td><td><select onchange='updateEditedTransport()' id='point_of_departure'>" + coloniesOptions + "</select></td></tr>"
+
+    coloniesOptions = ""
+    for (let i = 0; i < colonies.length; i++) {
+        coloniesOptions += "<option value='" + i + "'"
+        if (i == editedTransport.destination){
+            coloniesOptions += " selected='select'"
+        }
+        coloniesOptions += ">" + colonies[i].name + "</option>"
+    }
+    endResult += "<tr><td>Choose colony of destination: </td><td><select onchange='updateEditedTransport()' id='destination'>" + coloniesOptions + "</tr></table><br>"
+    endResult += "<div id='transporter_items'>"
+
+    for (let i in editedTransport.content) {
+        endResult += "<div class='transporter_item'>" + resource_types[editedTransport.content[i]].name 
+        + " (size " + resource_types[editedTransport.content[i]].size + ")<button type='button' class='plus_button' onclick='removeFromEditedTransport(" + i + ")'>-</button></div>"
+    }
+
+    endResult += "</div><div class='transporter_item' id='add_to_transport_div'><select onchange='updateEditedTransport()' id='add_to_transport'>"
+    for (let i = 0; i < resource_types.length; i++) {
+        if (resource_types[i].can_be_transported_normally) {
+            endResult += "<option value='" + i + "'"
+            if (i == lastSelectedResource) endResult += " selected='select'"
+            endResult += ">" + resource_types[i].name + " (size " + resource_types[i].size + ")</option>"
+        }
+    }
+    endResult += "</select><button type='button' class='plus_button' onclick='addToEditedTransport()'>+</button></div>"
+
+    endResult += "<br><button type='button' class='' onclick='sendTransport()'>Send transport</button>"
+    bigWindowContent.innerHTML = endResult
     openBigWindow()
 }
 
-function openTechTree(){
+function removeFromEditedTransport (i) {
+    editedTransport.removeFromTransport(i)
+    openTransferResources()
+}
+
+function addToEditedTransport () {
+    if (editedTransport.addToTransport(Number(document.getElementById('add_to_transport').value))) {
+        updateEditedTransport()
+        openTransferResources()
+    }
+    else {
+        alert("Too little space in the transporter to add that!")
+    }
+}
+
+function updateEditedTransport () {
+    pointOfDeparture = Number(document.getElementById("point_of_departure").value)
+    editedTransport.destination = Number(document.getElementById("destination").value)
+    lastSelectedResource = Number(document.getElementById("add_to_transport").value)
+}
+
+function sendTransport () {
+    if (colonies[pointOfDeparture].newTransport(editedTransport)){
+        updateEditedTransport()
+        transports.push(editedTransport)
+        editedTransport = null
+        closeBigWindow()
+    }
+    else {
+        alert(colonies[pointOfDeparture].name + " can't afford sending that transport.")
+    }
+}
+
+function openTechTree () {
     document.getElementById("big_window_title").innerText = "Tech tree"
     openBigWindow()
 }
@@ -355,37 +498,56 @@ function openColonySelection(){
         if (i == currentColony) d.innerHTML += '<div class="colony_selected">' + colonies[i].name 
         + '<div class="colony_citizen_amount">' + colonies[i].citizens.length + '</div></div>'
 
-        else d.innerHTML += '<div class="colony_select" onclick="selectColony(' + i + ')">' + colonies[i].name
+        else d.innerHTML += '<div class="colony_select clickable" onclick="selectColony(' + i + ')">' + colonies[i].name
         + '<div class="colony_citizen_amount">' + colonies[i].citizens.length + '</div></div>'
     }
-    d.innerHTML += '<div class="colony_select" onclick="createNewColony()">Create a new colony</div>'
+    d.innerHTML += '<div class="colony_select clickable" onclick="createNewColony()">Create a new colony</div>'
 
     openBigWindow()
 }
 
-function openManageFacilities(){
+function openManageFacilities () {
     document.getElementById("big_window_title").innerText = "Manage facilities"
     openBigWindow()
 }
 
-function openBigWindow(){
+function openBigWindow () {
     document.getElementById("big_window").hidden = false
 }
 
-function closeBigWindow(){
+function closeBigWindow () {
     document.getElementById("big_window").hidden = true
 }
 
-function selectColony(n){
+function selectColony (n) {
     currentColony = n
+    updateResourceManager()
     openColonySelection()
 }
 
-function createNewColony(){
-    
+function updateResourceManager () {
+    document.getElementById("cityName").innerText = colonies[currentColony].name
+    local_resources = document.getElementById("local_resources")
+    local_resources.innerHTML = ""
+
+    for (let i in colonies[currentColony].resources){
+        local_resources.innerHTML += "<tr><td>" + i + ":</td><td>" + colonies[currentColony].resources[i] + "</td></tr>"
+    }
 }
 
-//document.getElementById('element').hidden = true
+function createNewColony(){
+    if (colonies[currentColony].canAfford(building_types["Colony base"])){
+        colonies.push(new colony(0, 0, randomColonyName()))
+        openColonySelection()
+    }
+    else {
+        alert("This colony can't afford building a new colony.")
+    }
+}
+
+
+
+
 
 const size = {
     research_data: 1,
@@ -408,22 +570,25 @@ const resource_names = {
 }
 
 const resource_types = [
-    new resource_type(resource_names.citizen, 1),
+    new resource_type(resource_names.citizen, 1, false),
     new resource_type(resource_names.building_materials, 4),
     new resource_type(resource_names.metasubstance, 5),
     new resource_type(resource_names.fabricated_goods, 3),
-    new resource_type(resource_names.energy_unit, 10),
+    new resource_type(resource_names.energy_unit, 10, false),
     new resource_type(resource_names.food, 2),
-    new resource_type(resource_names.research_data, 1),
+    new resource_type(resource_names.research_data, 6),
 ]
 
-const building_types = [
-    new building("Colony base", [], [], [[resource_names.building_materials, 10]], 8, 0, 0, 0, 0, [], false),
-    new building("Housing", [], [[resource_names.energy_unit, 4]], [[resource_names.building_materials, 5], [resource_names.metasubstance, 1]], 3, 0, 0, 0, 6, [resource_names.citizen]),
-    new building("Metasubstance extractor", [[resource_names.metasubstance, 5]], [[resource_names.energy_unit, 10]], [[resource_names.building_materials, 12]], 5, 0, 0, -1, 0, []),
-    new building("General goods factory", [[resource_names.fabricated_goods, 4]], [[resource_names.energy_unit, 10]], [[resource_names.building_materials, 10], [resource_names.metasubstance, 5]])
-]
+const building_types = {
+    "Colony base": new building("Colony base", [], [], [[resource_names.building_materials, 10]], 8, 0, 0, 0, 0, [], false),
+    "Housing": new building("Housing", [], [[resource_names.energy_unit, 4]], [[resource_names.building_materials, 5], [resource_names.metasubstance, 1]], 3, 0, 0, 0, 6, [resource_names.citizen]),
+    "Metasubstance extractor": new building("Metasubstance extractor", [[resource_names.metasubstance, 5]], [[resource_names.energy_unit, 10]], [[resource_names.building_materials, 12]], 5, 0, 0, -1, 0, []),
+    "General goods factory": new building("General goods factory", [[resource_names.fabricated_goods, 4]], [[resource_names.energy_unit, 10]], [[resource_names.building_materials, 10], [resource_names.metasubstance, 5]])
+}
 
+let lastSelectedResource = null
+let pointOfDeparture = 0
+let editedTransport = null
 let date = 0
 let colonies = []
 let notifs = []
@@ -431,14 +596,50 @@ let transports = []
 let orders = []
 let currentColony = 0
 
-function load () {
-    notifs.push(new notif("haha", "this is a test"))
+function nextTurn () {
+    date++
+    if (colonies.length == 0){
 
+    }
+
+    console.log(transports[0].content)
+    for (let i in transports) colonies[transports[i].destination].unpackTransporter(transports[i])
+    transports = []
+
+    for (let i = 0; i < colonies.length; i++){
+        colonies[i].resources = colonies[i].new_resources
+        colonies[i].transporters = colonies[i].new_transporters
+        colonies[i].consumeProduce()
+        colonies[i].oldAgeDeaths()
+    }
+
+    for (let i = 0; i < colonies.length; i++){
+        if (colonies[i]){
+            if (colonies[i].food < colonies[i].citizens){
+                let amount = colonies[i].citizens.length - colonies[i].food
+                for (let j = 0; j < amount; j++){
+                    colonies[i].citizens.splice(getRandomInt(0, colonies[i].citizens.length), 1)
+                }
+                colonies[i].food -= amount
+                colonies[i].deaths += amount
+                colonies[i].non_old_age_deaths += amount
+            }
+        }
+    }
     openNotif()
+}
 
-    document.getElementById("cityName").innerText = COLONY_NAMES[getRandomInt(0, COLONY_NAMES.length)]
+function load () {
     document.title = "Colony on " + PLANET_NAME
 
     colonies.push(new colony(0, 0, randomColonyName()))
     colonies.push(new colony(0, 0, randomColonyName()))
+    colonies[1].new_resources[resource_names.building_materials] = 30000000000
+    colonies[1].new_transporters = 3
+    updateResourceManager()
+    nextTurn()
+
+    notifs.push(new notif("haha", "lol"))
+
+    console.log("Script loaded succesfully.")
 }

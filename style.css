@@ -11,7 +11,7 @@ f5dfbb
     height: 93vh;
     background-color: #F5DFBB;
     margin: auto;
-    font-family: 'Lucida Sans';
+    font-family: 'Pixeloid Sans';
     color: #E6EED6;
 }
 
@@ -39,7 +39,7 @@ f5dfbb
 
 #resource_manager_inside {
     margin-left: 4%;
-    height: 95.5%;
+    height: 93%;
 }
 
 #colony_selector {
@@ -95,6 +95,7 @@ body {
 }
 
 .notif_details {
+    position: relative;
     height: 80%;
     padding: 1%;
 }
@@ -154,19 +155,20 @@ img {
 #question_mark {
     font-size: 130%;
     float: right;
-    padding: 2%;
+    padding: 1%;
 }
 
 #question_mark:hover {
     cursor: help;
 }
 
-button {
+button[type = button] {
     background-color: #E6EED6;
+    font-family: "Pixeloid Sans";
+    color: black;
     border-color: #562C2C;
-    font-style: inherit;
-    color: #562C2C;
     text-align: center;
+    border-width: 2px;
     font-size: 105%;
 }
 
@@ -180,12 +182,10 @@ button:hover {
 
 .colony_select {
     background-color: #10A8A8;
-    border-color: #562C2C;
 }
 
 .colony_selected {
     background-color: #14989A;
-    border-color: #562C2C;
 }
 
 .colony_select, .colony_selected {
@@ -195,4 +195,90 @@ button:hover {
 
 .colony_citizen_amount {
     float: right;
+}
+
+#transfer_table {
+    max-width: 90%;
+    font-size: 120%;
+}
+
+select {
+    border-width: 2px;
+    border-color: black;
+    background-color: #E6EED6;
+    font-family: "Pixeloid Sans";
+}
+
+.plus_button {
+    float: right;
+    font-size: 110%;
+    font-family: "Pixeloid Sans";
+}
+
+#transporter_items {
+    position: relative;
+    max-width: 90%;
+    height: 70%;
+    display: flexbox;
+    background-color: #10A8A8;
+    padding: 1%;
+    overflow-y: scroll;
+}
+
+.transporter_item {
+    background-color: #10A8A8;
+    float: left;
+    width: 97%;
+    margin-top: 1%;
+    padding-bottom: 1%;
+    font-size: 110%;
+    border-bottom-color: #E6EED6;
+    border-bottom-width: 2px;
+    border-bottom-style: solid;
+}
+
+#add_to_transport, #point_of_departure, #destination {
+    font-size: 105%;
+}
+
+#point_of_departure, #destination {
+    margin-left: 20%;
+}
+
+#add_to_transport_div {
+    border-top-color: #E6EED6;
+    border-top-width: 2px;
+    border-top-style: solid;
+    margin-top: 0%;
+    padding: 1%;
+    width: 90%;;
+    margin-bottom: 2%;
+}
+
+::-webkit-scrollbar {
+    width: 12px;
+}
+
+::-webkit-scrollbar-track {
+    background: #E6EED6;
+}
+
+::-webkit-scrollbar-thumb {
+    background-color: #562C2C;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #562C2C;
+}
+
+@font-face {
+    font-family: "Pixeloid Sans";
+    font-weight: normal;
+    src: url("assets/fonts/pixeloid-font/PixeloidSans-nR3g1.ttf");
+}
+
+@font-face {
+    font-family: "Pixeloid Sans Bold";
+    font-weight: bold;
+    src: url("assets/fonts/pixeloid-font/PixeloidSansBold-RpeJo.ttf");
 }

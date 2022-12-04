@@ -36,57 +36,28 @@
 						Eos voluptas quae ex ipsam voluptatum molestiae rerum rem. Et amet quibusdam omnis aliquam nulla in aut. Impedit consequatur nesciunt inventore.
 					</p>
 				</div>
-				<div id="notif" class="window_shadow"></div>
+				<div id="notif" class="window_shadow" hidden="true"></div>
 			</div>
 			<div id="resource_manager"><div id="resource_manager_inside">
-				<table>
-					<tr>
-						<td colspan="2"><h2>Resource status of <a id="cityName"></a>:</h2></td>
-					</tr>
-					<tr>
-						<td>Food:</td>
-					</tr>
-					<tr>
-						<td>Building materials:</td>
-					</tr>
-					<tr>
-						<td>Storage filled/capacity:</td>
-					</tr>
+				<h2>Status of <a id="cityName"></a></h2>
+				<h3>Global resources</h3>
+				<table id="global_resources">
+					
 				</table>
-				<br>
-				<table>
-					<tr>
-						<td>Energy production/consumption:</td>
-					</tr>
-					<tr>
-						<td>Transporters:</td>
-					</tr>
-					<tr>
-						<td colspan="2"><h2>Next month status prediction:</h2></td>
-					</tr>
-					<tr>
-						<td>Food:</td>
-					</tr>
-					<tr>
-						<td>Energy:</td>
-					</tr>
-					<tr>
-						<td>Build tokens:</td>
-					</tr>
-					<tr>
-						<td>Transporters:</td>
-					</tr>
+				<br><h3>Local resources:</h3>
+				<table id="local_resources">
+
 				</table>
 				
 				</div><div id="question_mark" onclick="openHowTo()">?</div>
+			</div>
 
-				<div id="big_window" class="window_shadow">
-					<div class="notif_title">
-						<div class="window_title_inside"><div id="big_window_title">Title</div></div>
-						<div class="x_button clickable" onclick="closeBigWindow()"><img src="images/X.png"></div>
-					</div>
-					<div id="big_window_details" class="notif_details">yeah</div>
+			<div id="big_window" class="window_shadow" hidden="true">
+				<div class="notif_title">
+					<div class="window_title_inside"><div id="big_window_title">Title</div></div>
+					<div class="x_button clickable" onclick="closeBigWindow()"><img src="assets/images/X.png"></div>
 				</div>
+				<div id="big_window_details" class="notif_details">yeah</div>
 			</div>
 		</div>
 	</body>
