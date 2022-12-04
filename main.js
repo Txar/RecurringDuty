@@ -106,7 +106,7 @@ class citizen {
     constructor (date, extroversion = -1) {
         this.birth_date = date
         this.gender = getRandomInt(0, 1)
-        if (Math.random() > 0.88){
+        if (Math.random() > 0.88) {
             this.gender = gender.other
         }
         if (extroversion >= 1 || extroversion <= -1) {
@@ -276,7 +276,6 @@ class colony {
             }
         });
 
-        console.log(lostResources, " ", capacity, " ", this.new_resources, " ", t.content)
         if (Object.keys(lostResources).length > 0){
             let details = "You lost resources from a transport to " + colonies[t.destination].name + " because the storage was full.<br>Resources lost:"
             for (let i in lostResources) {
@@ -295,19 +294,16 @@ class colony {
             let temp_citizens = this.new_citizens
             let temp_energy_units = this.new_energy_units*/
 
-            let transporter_copy = transporter
-
             let temp_resources = this.new_resources
 
-            while (transporter_copy.content.length > 0){
-                if (isNaN(temp_resources[resource_types[transporter_copy.content[0]].name])) {
-                    temp_resources[resource_types[transporter_copy.content[0]].name] = 0
+            transporter.content.forEach(i => {
+                if (isNaN(temp_resources[resource_types[i].name])) {
+                    temp_resources[resource_types[i].name] = 0
                 }
 
-                temp_resources[resource_types[transporter_copy.content[0]].name]--
-                if (temp_resources[resource_types[transporter_copy.content[0]].name] < 0) return false;
-                transporter_copy.content.shift()
-            }
+                temp_resources[resource_types[i].name]--
+                if (temp_resources[resource_types[i].name] < 0) return false;
+            })
 
             /*for (let i = 0; i < transporter.content.length; i++){
                 if (transporter.content[i] == contents.citizen) {
@@ -459,6 +455,7 @@ function removeFromEditedTransport (i) {
 
 function addToEditedTransport () {
     if (editedTransport.addToTransport(Number(document.getElementById('add_to_transport').value))) {
+        console.log(editedTransport.content)
         updateEditedTransport()
         openTransferResources()
     }
@@ -602,7 +599,6 @@ function nextTurn () {
 
     }
 
-    console.log(transports[0].content)
     for (let i in transports) colonies[transports[i].destination].unpackTransporter(transports[i])
     transports = []
 

@@ -88,7 +88,7 @@ body {
 .notif_title {
     background-color: #10A8A8;
     height: 8%;
-    padding: 0;
+    padding: 1%;
     font-size: 120%;
     font-weight: bold;
     color: #E6EED6;
@@ -150,6 +150,7 @@ img {
 .window_title_inside {
     padding: 1%;
     float: left;
+    width: 50%;
 }
 
 #question_mark {
@@ -200,6 +201,12 @@ button:hover {
 #transfer_table {
     max-width: 90%;
     font-size: 120%;
+}
+
+#big_window_title {
+    float: left;
+    font-size: 120%;
+    height: 100%;
 }
 
 select {
