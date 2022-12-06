@@ -25,7 +25,7 @@ function randomColonyName(){
 
 const MIN_DEATH_AGE = 30
 
-const PLANET_NAME = planetNameGenerator(Math.random(10) * 10 + 3)
+const PLANET_NAME = planetNameGenerator(((Math.random() * 10) % 8) + 3)
 
 const TRANSPORTER_CAPACITY = 24
 //const STORAGE_CAPACITY = 60
@@ -69,7 +69,9 @@ function getRandomInt (min, max) {
 function planetNameGenerator (nameLength) {
     let name = ""
     for (let i = 0; i < nameLength; i++){
-        name += CHARACTERS.charAt(Math.random(CHARACTERS.length) * (CHARACTERS.length))
+        if (i == nameLength || i == 0) r = Math.random(CHARACTERS.length) * (CHARACTERS.length - 4)
+        else r = Math.random(CHARACTERS.length) * (CHARACTERS.length)
+        name += CHARACTERS.charAt(r)
     }
     return name
 }
@@ -127,7 +129,7 @@ class building {
     constructor (name, production, consumption, cost, maintenance_interval = 3,
         workers = 0, worker_happiness_improvement = 0, colony_happiness_improvement = 0,
         storage_capacity = 0, storage_types = [], buildable = true) {
-        //production, consumption, etc stored like 
+        //production, consumption, etc stored like
         ///[[item, amount], [item2, amount2]]
         this.name = name
         this.production = production
@@ -140,6 +142,19 @@ class building {
         this.storage_capacity = storage_capacity
         this.storage_types = storage_types
         this.buildable = buildable
+        this.maintenance_counter = 0
+    }
+
+    needsMaintenance () {
+        return this.maintenance_counter > this.maintenance_counter
+    }
+
+    resetMaintenanceCounter () {
+        this.maintenance_counter = 0
+    }
+
+    update () {
+        this.maintenance_counter++
     }
 
     canBeStored (resource_name) {
@@ -177,21 +192,23 @@ class colony {
         this.new_citizens = 0
 
         this.buildings = []
+        this.new_buildings = []
     }
 
     consumeProduce () {
         let maxCapacity = this.maxCapacity()
         let lostResources = {}
         this.buildings.forEach(i => {
-            let temp_resources = this.resources
             let can_produce = true
+            let temp_resources = this.resources
             i.consumption.forEach(j => {
+                if (isNaN(temp_resources[j[0]])) temp_resources[j[0]] = 0
                 temp_resources[j[0]] -= j[1]
                 if (temp_resources[j[0]] < 0) {
                     can_produce = false
                 }
-                return
             })
+            console.log(can_produce)
             if (can_produce) {
                 i.production.forEach(j => {
                     if (isNaN(temp_resources[j[0]])) temp_resources[j[0]] = 0
@@ -202,13 +219,13 @@ class colony {
                     }
                     else temp_resources[j[0]] += j[1]
                 })
-                this.resources = temp_resources
+                this.new_resources = temp_resources
             }
             else {
                 notifs.push(new notif("Insufficient resources!", "A " + i.name + " in " + this.name + " couldn't produce because the needed resources weren't provided."))
             }
         })
-        if (Object.keys(lostResources).length > 0){
+        if (Object.keys(lostResources).length > 0) {
             let details = "You lost resources from production in " + this.name + " because the storage was full.<br>Resources lost:"
             for (let i in lostResources) {
                 details += "<br>" + lostResources[i] + "x" + " " + i
@@ -249,7 +266,7 @@ class colony {
     oldAgeDeaths () {
         let new_citizens = []
         for (let i = 0; i < this.citizens.length; i++){
-            if (Math.random() > this.citizens[i].oldAgeDeathProbability) {
+            if (Math.random() > this.citizens[i].oldAgeDeathProbability()) {
                 new_citizens.push(this.citizens[i])
             }
         }
@@ -339,7 +356,7 @@ class colony {
         return this.citizens.length * this.calcHappiness()
     }
 
-    canAfford (b) {
+    canAfford (b, doBuild = true) {
         let temp_resources = this.new_resources
         for (let i = 0; i < b.cost.length; i++){
             if (isNaN(temp_resources[b.cost[i][0]]) || temp_resources[b.cost[i][0]] < b.cost[i][1]){
@@ -349,7 +366,10 @@ class colony {
                 temp_resources[b.cost[i][0]] -= b.cost[i][1]
             }
         }
-        this.new_resources = temp_resources
+        if (doBuild) {
+            this.new_resources = temp_resources
+            this.new_buildings.push(b)
+        }
         return true
     }
 }
@@ -455,7 +475,6 @@ function removeFromEditedTransport (i) {
 
 function addToEditedTransport () {
     if (editedTransport.addToTransport(Number(document.getElementById('add_to_transport').value))) {
-        console.log(editedTransport.content)
         updateEditedTransport()
         openTransferResources()
     }
@@ -471,7 +490,10 @@ function updateEditedTransport () {
 }
 
 function sendTransport () {
-    if (colonies[pointOfDeparture].newTransport(editedTransport)){
+    if (pointOfDeparture == editedTransport.destination) {
+        alert("Why would you send resources from a city to itself?")
+    }
+    else if (colonies[pointOfDeparture].newTransport(editedTransport)){
         updateEditedTransport()
         transports.push(editedTransport)
         editedTransport = null
@@ -505,7 +527,50 @@ function openColonySelection(){
 
 function openManageFacilities () {
     document.getElementById("big_window_title").innerText = "Manage facilities"
+    bigWindowContent = document.getElementById("big_window_details")
+    let endResult = ""
+
+    endResult += "<div id='transporter_items'>"
+
+    for (let i = 0; i < colonies[currentColony].buildings.length; i++) {
+        endResult += "<div class='transporter_item'>" + colonies[currentColony].buildings[i].name 
+        + "<button type='button' class='plus_button' onclick='removeBuilding(" + i + ")'>-</button></div>"
+    }
+
+    endResult += "</div><div class='transporter_item' id='add_to_transport_div'><select onchange='updateCurrentFacility()' id='current_facility'>"
+    let count = 0
+    for (let i in building_types) {
+        if (building_types[i].buildable && colonies[currentColony].canAfford(building_types[i], false)) {
+            endResult += "<option value='" + i + "'"
+            if (i == lastSelectedFacility) endResult += " selected='select'"
+            endResult += ">" + count + " " + building_types[i].name + "</option>"
+            count++
+        }
+    }
+    if (count == 0) {
+        endResult += "<option value='null' selected='select'>Can't afford anything :(</option>"
+    }
+
+    endResult += "</select><button type='button' class='plus_button' onclick='buildNewFacility()'>+</button></div>"
+
+    bigWindowContent.innerHTML = endResult
     openBigWindow()
+}
+
+function updateCurrentFacility () {
+    lastSelectedFacility = document.getElementById("current_facility").value
+}
+
+function removeBuilding (i) {
+    colonies[currentColony].buildings.splice(i, 1)
+    openManageFacilities()
+}
+
+function buildNewFacility () {
+    updateCurrentFacility()
+    if (lastSelectedFacility == null) alert("This colony can't afford to build anything!")
+    else colonies[currentColony].canAfford(building_types[lastSelectedFacility])
+    openManageFacilities()
 }
 
 function openBigWindow () {
@@ -584,6 +649,7 @@ const building_types = {
 }
 
 let lastSelectedResource = null
+let lastSelectedFacility = null
 let pointOfDeparture = 0
 let editedTransport = null
 let date = 0
@@ -605,11 +671,12 @@ function nextTurn () {
     for (let i = 0; i < colonies.length; i++){
         colonies[i].resources = colonies[i].new_resources
         colonies[i].transporters = colonies[i].new_transporters
+        colonies[i].buildings = colonies[i].new_buildings
         colonies[i].consumeProduce()
         colonies[i].oldAgeDeaths()
     }
 
-    for (let i = 0; i < colonies.length; i++){
+    /*for (let i = 0; i < colonies.length; i++){
         if (colonies[i]){
             if (colonies[i].food < colonies[i].citizens){
                 let amount = colonies[i].citizens.length - colonies[i].food
@@ -621,7 +688,7 @@ function nextTurn () {
                 colonies[i].non_old_age_deaths += amount
             }
         }
-    }
+    }*/
     openNotif()
 }
 
@@ -634,8 +701,6 @@ function load () {
     colonies[1].new_transporters = 3
     updateResourceManager()
     nextTurn()
-
-    notifs.push(new notif("haha", "lol"))
 
     console.log("Script loaded succesfully.")
 }
