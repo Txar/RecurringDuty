@@ -97,7 +97,12 @@ body {
 .notif_details {
     position: relative;
     height: 80%;
+    min-width: 95%;
     padding: 1%;
+}
+
+.overflow_scroll {
+    overflow-y: auto;
 }
 
 #notif {
@@ -229,7 +234,7 @@ select {
     display: flexbox;
     background-color: #10A8A8;
     padding: 1%;
-    overflow-y: scroll;
+    overflow-y: auto;
 }
 
 .transporter_item {

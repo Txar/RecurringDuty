@@ -191,12 +191,22 @@ class colony {
         this.new_transporters = 0
         this.new_citizens = 0
 
-        this.buildings = []
-        this.new_buildings = []
+        this.buildings = [building_types["Colony base"]]
+        this.new_buildings = [building_types["Colony base"]]
     }
 
-    consumeProduce () {
+    update () {
         let maxCapacity = this.maxCapacity()
+
+        {
+            let capacity = this.capacity()
+            for (let i in capacity) {
+                if (capacity[i] < 0) {
+                    this.new_resources[i] += capacity[i]
+                }
+            }
+        }
+
         let lostResources = {}
         this.buildings.forEach(i => {
             let can_produce = true
@@ -212,25 +222,34 @@ class colony {
             if (can_produce) {
                 i.production.forEach(j => {
                     if (isNaN(r[j[0]])) r[j[0]] = 0
+                    if (isNaN(maxCapacity[j[0]])) maxCapacity[j[0]] = 0
 
                     if (r[j[0]] + j[1] > maxCapacity[j[0]]){
-                        if (isNaN(lostResources[j[0]])) lostResources[j[0]] = 0
-                        lostResources[j[0]] + j[1]
+                        let rest = r[j[0]] - (maxCapacity[j[0]] + j[1])
+                        if (rest < 0) rest = 0
+                        if (j[1] - rest > 0) {
+                            if (isNaN(lostResources[j[0]])) lostResources[j[0]] = 0
+                            lostResources[j[0]] += j[1] - rest
+                        }
+                        r[j[0]] += rest
                     }
-                    else temp_resources[j[0]] += j[1]
+                    else r[j[0]] += j[1]
                 })
                 this.new_resources = r
             }
             else {
                 notifs.push(new notif("Insufficient resources!", "A " + i.name + " in " + this.name + " couldn't produce because the needed resources weren't provided."))
             }
+            i.update()
         })
         if (Object.keys(lostResources).length > 0) {
             let details = "You lost resources from production in " + this.name + " because the storage was full.<br>Resources lost:"
             for (let i in lostResources) {
-                details += "<br>" + lostResources[i] + "x" + " " + i
+                if (i != resource_names.energy_unit) details += "<br>" + lostResources[i] + "x" + " " + i
             }
-            notifs.push(new notif("Resources lost!", details))
+            if (details != "You lost resources from production in " + this.name + " because the storage was full.<br>Resources lost:") {
+                notifs.push(new notif("Resources lost!", details))
+            }
         }
     }
 
@@ -239,8 +258,8 @@ class colony {
         this.buildings.forEach(i => {
             if (!(i.storage_capacity == 0)){
                 i.storage_types.forEach(j => {
-                    if (isNaN(capacity[j[0]])) capacity[j[0]] = 0
-                    capacity[j[0]] += j[1] * i.storage_capacity
+                    if (isNaN(capacity[j])) capacity[j] = 0
+                    capacity[j] += i.storage_capacity
                 })
             }
         })
@@ -356,8 +375,9 @@ class colony {
         return this.citizens.length * this.calcHappiness()
     }
 
-    canAfford (b, doBuild = true) {
-        let temp_resources = this.new_resources
+    canAfford (b, doBuild = true, doConsume = doBuild) {
+        let temp_resources = {}
+        Object.assign(temp_resources, this.new_resources);
         for (let i = 0; i < b.cost.length; i++){
             if (isNaN(temp_resources[b.cost[i][0]]) || temp_resources[b.cost[i][0]] < b.cost[i][1]){
                 return false
@@ -366,10 +386,8 @@ class colony {
                 temp_resources[b.cost[i][0]] -= b.cost[i][1]
             }
         }
-        if (doBuild) {
-            this.new_resources = temp_resources
-            this.new_buildings.push(b)
-        }
+        if (doConsume) this.new_resources = temp_resources
+        if (doBuild) this.new_buildings.push(b)
         return true
     }
 }
@@ -388,7 +406,7 @@ class notif {
 
     returnInnerHTML () {
         return '<div class="notif_title"><div class="window_title_inside">' + this.title
-        + '</div></div><div class="notif_details">' + this.details
+        + '</div></div><div class="notif_details overflow_scroll">' + this.details
         + '</div><form id="notif_ok_form"><button type="button" class="notif_ok_button" onclick="closeNotif()">OK</button></form>'
     }
 }
@@ -533,8 +551,16 @@ function openManageFacilities () {
     endResult += "<div id='transporter_items'>"
 
     for (let i = 0; i < colonies[currentColony].buildings.length; i++) {
-        endResult += "<div class='transporter_item'>" + colonies[currentColony].buildings[i].name 
-        + "<button type='button' class='plus_button' onclick='removeBuilding(" + i + ")'>-</button></div>"
+        if (colonies[currentColony].buildings[i].buildable) {
+            endResult += "<div class='transporter_item'>" + colonies[currentColony].buildings[i].name 
+            + "<button type='button' class='plus_button' onclick='removeBuilding(" + i + ")'>-</button></div>"
+        }
+    }
+    for (let i = 0; i < colonies[currentColony].new_buildings.length; i++) {
+        if (colonies[currentColony].new_buildings[i].buildable) {
+            endResult += "<div class='transporter_item'>" + colonies[currentColony].new_buildings[i].name 
+            + " (will be built next round)</div>"
+        }
     }
 
     endResult += "</div><div class='transporter_item' id='add_to_transport_div'><select onchange='updateCurrentFacility()' id='current_facility'>"
@@ -598,7 +624,7 @@ function updateResourceManager () {
 }
 
 function createNewColony(){
-    if (colonies[currentColony].canAfford(building_types["Colony base"])){
+    if (colonies[currentColony].canAfford(building_types["Colony base"], false, true)){
         colonies.push(new colony(0, 0, randomColonyName()))
         openColonySelection()
     }
@@ -628,7 +654,8 @@ const resource_names = {
     fabricated_goods: "Fabricated goods",
     energy_unit: "Energy",
     food: "Food",
-    research_data: "Research data"
+    research_data: "Research data",
+    research_point: "Research points"
 }
 
 const resource_types = [
@@ -639,14 +666,55 @@ const resource_types = [
     new resource_type(resource_names.energy_unit, 10, false),
     new resource_type(resource_names.food, 2),
     new resource_type(resource_names.research_data, 6),
+    new resource_type(resource_names.research_point, 0, false)
 ]
 
+new building()
+
 const building_types = {
-    "Colony base": new building("Colony base", [], [], [[resource_names.building_materials, 10]], 8, 0, 0, 0, 0, [], false),
-    "Housing": new building("Housing", [], [[resource_names.energy_unit, 4]], [[resource_names.building_materials, 5], [resource_names.metasubstance, 1]], 3, 0, 0, 0, 6, [resource_names.citizen]),
-    "Metasubstance extractor": new building("Metasubstance extractor", [[resource_names.metasubstance, 5]], [[resource_names.energy_unit, 10]], [[resource_names.building_materials, 12]], 5, 0, 0, -1, 0, []),
-    "General goods factory": new building("General goods factory", [[resource_names.fabricated_goods, 4]], [[resource_names.energy_unit, 10]], [[resource_names.building_materials, 10], [resource_names.metasubstance, 5]])
+    "Colony base": new building("Colony base", [], [], [[resource_names.building_materials, 10]], 10, 0, 0, 0, 6, [resource_names.citizen], false),
+
+    "Housing": new building("Housing", [], [[resource_names.energy_unit, 4]], 
+    [[resource_names.building_materials, 5], [resource_names.metasubstance, 1]], 8, 0, 0, 0, 6, [resource_names.citizen]),
+
+    "Metasubstance extractor": new building("Metasubstance extractor", [[resource_names.metasubstance, 5]], 
+    [[resource_names.energy_unit, 10]], [[resource_names.building_materials, 12]], 10, 0, 0, -0.1, 0, []),
+
+    "General goods factory": new building("General goods factory", [[resource_names.fabricated_goods, 4]], 
+    [[resource_names.energy_unit, 10], [resource_names.metasubstance, 6]], [[resource_names.building_materials, 10], [resource_names.metasubstance, 5]]),
+
+    "Wind power plant": new building("Wind power plant", [[resource_names.energy_unit, 10]], 
+    [], [[resource_names.building_materials, 5], [resource_names.metasubstance, 7]], 14, 0, 0, 0, 10, [resource_names.energy_unit], true),
+
+    "Battery stack": new building("Battery stack", [], [], [[resource_names.metasubstance, 8]], 9, 0, 0, 0, 40, [resource_names.energy_unit]),
+
+    "Basic farm": new building("Basic farm", [[resource_names.food, 6]], [[resource_names.energy_unit, 4]], 
+    [[resource_names.building_materials, 8]], 14, 2, 0.15, 0.15, 12, [resource_names.food]),
+
+    "Advanced farm": new building("Advanced farm", [[resource_names.food, 16]], [[resource_names.energy_unit, 6]], 
+    [[resource_names.building_materials, 8], [resource_names.metasubstance, 6], [resource_names.fabricated_goods, 2]], 12, 4, 0.1, 0.1, 32, [resource_names.food]),
+
+    "Technology engineering center": new building("Technology engineering center", [[resource_names.research_point, 1]], 
+    [[resource_names.research_data, 1], [resource_names.energy_unit, 16]], 
+    [[resource_names.building_materials, 50], [resource_names.fabricated_goods, 30], [resource_names.metasubstance, 20]], 16, 12, 0.08, 0.04, 0, []),
+
+    "Research center": new building("Research center", [[resource_names.research_point, 1]], [[resource_names.energy_unit, 12]], 
+    [[resource_names.building_materials, 25], [resource_names.metasubstance, 20], [resource_names.fabricated_goods, 10]], 
+    12, 8, 0.08, 0.04, 4, [resource_names.research_data]),
+
+    "Diner": new building("Diner", [], [[resource_names.energy_unit, 4], [resource_names.fabricated_goods, 2]], 
+    [[resource_names.building_materials, 12], [resource_names.fabricated_goods, 8]], 6, 6, -0.02, 0.1, 0, [], true),
+
+    "Building materials factory": new building("Building materials factory", [[resource_names.building_materials, 6]], 
+    [[resource_names.energy_unit, 12], [resource_names.metasubstance, 6]], [[resource_names.metasubstance, 9], [resource_names.building_materials, 4]], 
+    10, 0, 0, -0.05, 12, [resource_names.building_materials]),
+
+    "Small warehouse": new building("Small warehourse", [], [], [[resource_names.building_materials, 10]], 12, 0, 0, 0, 128, 
+    [resource_names.food, resource_names.building_materials, resource_names.metasubstance, resource_names.fabricated_goods, resource_names.research_data])
 }
+
+let unlockedBuildings = ["Housing", "Basic farm", "Wind power plant", "Technology engineering center", "General goods factory", 
+"Building materials factory", "Metasubstance extractor"]
 
 let lastSelectedResource = null
 let lastSelectedFacility = null
@@ -658,6 +726,33 @@ let notifs = []
 let transports = []
 let orders = []
 let currentColony = 0
+
+
+
+function compressNotifs () {
+    let new_notifs = []
+    let count = 1
+    let title = ""
+    let description = ""
+    for (let i in notifs) {
+        if (i == 0) {
+            title = notifs[i].title
+            description = notifs[i].details
+        }
+        if (notifs[i].title == title && i != notifs.length - 1) {
+            description += "<br>" + notifs[i].details
+            count++
+        }
+        else {
+            if (count > 1) title += " (" + count + ")"
+            new_notifs.push(new notif(title, description))
+            count = 1
+            title = notifs[i].title
+            description = notifs[i].details
+        }
+    }
+    notifs = new_notifs
+}
 
 function nextTurn () {
     date++
@@ -671,8 +766,9 @@ function nextTurn () {
     for (let i = 0; i < colonies.length; i++){
         colonies[i].resources = colonies[i].new_resources
         colonies[i].transporters = colonies[i].new_transporters
-        colonies[i].buildings = colonies[i].new_buildings
-        colonies[i].consumeProduce()
+        colonies[i].buildings = colonies[i].buildings.concat(colonies[i].new_buildings)
+        colonies[i].new_buildings = []
+        colonies[i].update()
         colonies[i].oldAgeDeaths()
     }
 
@@ -690,6 +786,7 @@ function nextTurn () {
         }
     }*/
     updateResourceManager()
+    compressNotifs()
     openNotif()
 }
 
@@ -697,9 +794,8 @@ function load () {
     document.title = "Colony on " + PLANET_NAME
 
     colonies.push(new colony(0, 0, randomColonyName()))
-    colonies.push(new colony(0, 0, randomColonyName()))
-    colonies[1].new_resources[resource_names.building_materials] = 30000000000
-    colonies[1].new_transporters = 3
+    colonies[0].new_resources[resource_names.building_materials] = 300
+    colonies[0].new_resources[resource_names.metasubstance] = 300
     updateResourceManager()
     nextTurn()
 
