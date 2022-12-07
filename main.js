@@ -790,6 +790,7 @@ function nextTurn () {
     openNotif()
 }
 
+
 function load () {
     document.title = "Colony on " + PLANET_NAME
 
