@@ -200,26 +200,26 @@ class colony {
         let lostResources = {}
         this.buildings.forEach(i => {
             let can_produce = true
-            let temp_resources = this.resources
+            let r = {}
+            Object.assign(r, this.new_resources);
             i.consumption.forEach(j => {
-                if (isNaN(temp_resources[j[0]])) temp_resources[j[0]] = 0
-                temp_resources[j[0]] -= j[1]
-                if (temp_resources[j[0]] < 0) {
+                if (isNaN(r[j[0]])) r[j[0]] = 0
+                r[j[0]] -= j[1]
+                if (r[j[0]] < 0) {
                     can_produce = false
                 }
             })
-            console.log(can_produce)
             if (can_produce) {
                 i.production.forEach(j => {
-                    if (isNaN(temp_resources[j[0]])) temp_resources[j[0]] = 0
+                    if (isNaN(r[j[0]])) r[j[0]] = 0
 
-                    if (temp_resources[j[0]] + j[1] > maxCapacity[j[0]]){
+                    if (r[j[0]] + j[1] > maxCapacity[j[0]]){
                         if (isNaN(lostResources[j[0]])) lostResources[j[0]] = 0
                         lostResources[j[0]] + j[1]
                     }
                     else temp_resources[j[0]] += j[1]
                 })
-                this.new_resources = temp_resources
+                this.new_resources = r
             }
             else {
                 notifs.push(new notif("Insufficient resources!", "A " + i.name + " in " + this.name + " couldn't produce because the needed resources weren't provided."))
@@ -689,6 +689,7 @@ function nextTurn () {
             }
         }
     }*/
+    updateResourceManager()
     openNotif()
 }
 
